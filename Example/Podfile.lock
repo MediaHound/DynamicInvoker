@@ -1,0 +1,20 @@
+PODS:
+  - DynamicInvoker (0.1.0)
+  - Expecta (1.0.0)
+  - Specta (1.0.2)
+
+DEPENDENCIES:
+  - DynamicInvoker (from `../`)
+  - Expecta
+  - Specta
+
+EXTERNAL SOURCES:
+  DynamicInvoker:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  DynamicInvoker: 6c8ed2a5b3e331510b63cecec736e114b4ad34ab
+  Expecta: 32604574add2c46a36f8d2f716b6c5736eb75024
+  Specta: 9cec98310dca411f7c7ffd6943552b501622abfe
+
+COCOAPODS: 0.37.2

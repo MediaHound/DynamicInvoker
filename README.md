@@ -22,7 +22,7 @@ pod "DynamicInvoker"
 
 ## Author
 
-Dustin Bachrach, ahdustin@gmail.com
+Dustin Bachrach, dustin@mediahound.com
 
 ## License
 
