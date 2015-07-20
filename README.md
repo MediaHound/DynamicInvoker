@@ -26,4 +26,4 @@ Dustin Bachrach, dustin@mediahound.com
 
 ## License
 
-DynamicInvoker is available under the MIT license. See the LICENSE file for more info.
+DynamicInvoker is available under the Apache License 2.0. See the LICENSE file for more info.
