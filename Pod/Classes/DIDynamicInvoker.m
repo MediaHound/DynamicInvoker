@@ -11,9 +11,37 @@
 #import <objc/runtime.h>
 
 
+@interface DIDynamicInvoker : NSObject
+
++ (BOOL)dynamicInvokeFormat:(NSString*)format
+                       data:(id)data
+                         on:(id)obj;
+
++ (BOOL)dynamicInvokeFormat:(NSString*)format
+                       data:(id)data
+                         on:(id)obj
+              emptySelector:(SEL)emptySelector;
+
++ (BOOL)dynamicInvokeFormat:(NSString*)format
+                       data:(id)data
+                       base:(id)base
+                         on:(id)obj;
+
++ (BOOL)dynamicInvokeFormat:(NSString*)format
+                       data:(id)data
+                       base:(id)base
+                         on:(id)obj
+              emptySelector:(SEL)emptySelector;
+
+@end
+
+
 @implementation DIDynamicInvoker
 
-+ (BOOL)invokeDynamicMethodForFormat:(NSString*)format name:(NSString*)name data:(id)data on:(id)on
++ (BOOL)invokeDynamicMethodForFormat:(NSString*)format
+                                name:(NSString*)name
+                                data:(id)data
+                                  on:(id)on
 {
     NSString* selectorName = [NSString stringWithFormat:format, name];
     SEL selector = NSSelectorFromString(selectorName);
@@ -35,7 +63,9 @@
     }
 }
 
-+ (BOOL)invokeSelector:(SEL)selector on:(id)on withObject:(id)obj
++ (BOOL)invokeSelector:(SEL)selector
+                    on:(id)on
+            withObject:(id)obj
 {
     if ([on respondsToSelector:selector]) {
         IMP imp = [on methodForSelector:selector];
@@ -49,22 +79,45 @@
     }
 }
 
-+ (BOOL)dynamicInvokeFormat:(NSString*)format data:(id)data on:(id)obj
++ (BOOL)dynamicInvokeFormat:(NSString*)format
+                       data:(id)data
+                         on:(id)obj
 {
-    return [self dynamicInvokeFormat:format data:data on:obj emptySelector:nil];
+    return [self dynamicInvokeFormat:format
+                                data:data
+                                  on:obj
+                       emptySelector:nil];
 }
 
-+ (BOOL)dynamicInvokeFormat:(NSString*)format data:(id)data on:(id)obj emptySelector:(SEL)emptySelector
++ (BOOL)dynamicInvokeFormat:(NSString*)format
+                       data:(id)data
+                         on:(id)obj
+              emptySelector:(SEL)emptySelector
 {
-    return [self dynamicInvokeFormat:format data:data base:data on:obj emptySelector:emptySelector];
+    return [self dynamicInvokeFormat:format
+                                data:data
+                                base:data
+                                  on:obj
+                       emptySelector:emptySelector];
 }
 
-+ (BOOL)dynamicInvokeFormat:(NSString*)format data:(id)data base:(id)base on:(id)obj
++ (BOOL)dynamicInvokeFormat:(NSString*)format
+                       data:(id)data
+                       base:(id)base
+                         on:(id)obj
 {
-    return [self dynamicInvokeFormat:format data:data base:base on:obj emptySelector:nil];
+    return [self dynamicInvokeFormat:format
+                                data:data
+                                base:base
+                                  on:obj
+                       emptySelector:nil];
 }
 
-+ (BOOL)dynamicInvokeFormat:(NSString*)format data:(id)data base:(id)base on:(id)obj emptySelector:(SEL)emptySelector
++ (BOOL)dynamicInvokeFormat:(NSString*)format
+                       data:(id)data
+                       base:(id)base
+                         on:(id)obj
+              emptySelector:(SEL)emptySelector
 {
     if (base == [NSNull null]) {
         if (emptySelector) {
@@ -93,14 +146,21 @@
             return NO;
         }
         else {
-            [self invokeDynamicMethodForFormat:format name:methodName data:data on:obj];
+            [self invokeDynamicMethodForFormat:format
+                                          name:methodName
+                                          data:data
+                                            on:obj];
             return YES;
         }
     }
     
     while (baseClass) {
         NSString* baseClassName = NSStringFromClass(baseClass);
-        if ([self invokeDynamicMethodForFormat:format name:baseClassName data:data on:obj]) {
+        const BOOL didInvokeViaClass = [self invokeDynamicMethodForFormat:format
+                                                                     name:baseClassName
+                                                                     data:data
+                                                                       on:obj];
+        if (didInvokeViaClass) {
             [methodCache setObject:baseClassName forKey:cacheKey];
             return YES;
         }
@@ -112,7 +172,11 @@
             const char* cstrName = protocol_getName(protocols[i]);
             NSString* protocolName = [NSString stringWithUTF8String:cstrName];
             
-            if ([self invokeDynamicMethodForFormat:format name:protocolName data:data on:obj]) {
+            const BOOL didInvokeViaProtocol = [self invokeDynamicMethodForFormat:format
+                                                                            name:protocolName
+                                                                            data:data
+                                                                              on:obj];
+            if (didInvokeViaProtocol) {
                 [methodCache setObject:protocolName forKey:cacheKey];
                 return YES;
             }
@@ -124,7 +188,43 @@
     }
     
     [methodCache setObject:[NSNull null] forKey:cacheKey];
+    
     return NO;
+}
+
+@end
+
+
+@implementation NSObject (DIDynamicInvoking)
+
+- (BOOL)dynamicInvokeFormat:(NSString*)format
+                       data:(id)data
+{
+    return [DIDynamicInvoker dynamicInvokeFormat:format
+                                            data:data
+                                              on:self];
+}
+
+- (BOOL)dynamicInvokeFormat:(NSString*)format
+                       data:(id)data
+              emptySelector:(SEL)emptySelector
+{
+    return [DIDynamicInvoker dynamicInvokeFormat:format
+                                            data:data
+                                              on:self
+                                   emptySelector:emptySelector];
+}
+
+- (BOOL)dynamicInvokeFormat:(NSString*)format
+                       data:(id)data
+              emptySelector:(SEL)emptySelector
+                       base:(id)base
+{
+    return [DIDynamicInvoker dynamicInvokeFormat:format
+                                            data:data
+                                            base:base
+                                              on:self
+                                   emptySelector:emptySelector];
 }
 
 @end

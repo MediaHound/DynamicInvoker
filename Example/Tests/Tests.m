@@ -8,40 +8,88 @@
 
 // https://github.com/Specta/Specta
 
+#import <DynamicInvoker/DIDynamicInvoker.h>
+
+static NSInteger s_Value = 0;
+
+void clearValue() {
+    s_Value = 0;
+}
+
+@interface TestObj : NSObject
+
+- (void)doWithNSString:(NSString*)str;
+- (void)doWithNSDictionary:(NSDictionary*)dict;
+
+@end
+
+@implementation TestObj
+
+- (void)doWithNSString:(NSString*)str
+{
+    s_Value = 111;
+}
+
+- (void)doWithNSDictionary:(NSDictionary*)dict
+{
+    s_Value = 222;
+}
+
+- (void)doEmpty
+{
+    s_Value = 333;
+}
+
+@end
+
 SpecBegin(InitialSpecs)
 
-describe(@"these will fail", ^{
-
-    it(@"can do maths", ^{
-        expect(1).to.equal(2);
-    });
-
-    it(@"can read", ^{
-        expect(@"number").to.equal(@"string");
-    });
+describe(@"DynamicInvoker", ^{
     
-    it(@"will wait for 10 seconds and fail", ^{
-        waitUntil(^(DoneCallback done) {
+    TestObj* receiver = [[TestObj alloc] init];
+    
+    it(@"calls the proper method for object types via category", ^{
+        [receiver dynamicInvokeFormat:@"doWith%@:"
+                                 data:@"Hello String"];
+        expect(s_Value).to.equal(111);
+        clearValue();
         
-        });
-    });
-});
-
-describe(@"these will pass", ^{
-    
-    it(@"can do maths", ^{
-        expect(1).beLessThan(23);
+        [receiver dynamicInvokeFormat:@"doWith%@:"
+                                 data:@{@"key": @"value"}];
+        expect(s_Value).to.equal(222);
+        clearValue();
     });
     
-    it(@"can read", ^{
-        expect(@"team").toNot.contain(@"I");
+    it(@"calls the emptySelector for null data", ^{
+        [receiver dynamicInvokeFormat:@"doWith%@:"
+                                 data:[NSNull null]
+                        emptySelector:@selector(doEmpty)];
+        expect(s_Value).to.equal(333);
+        clearValue();
+        
+        [receiver dynamicInvokeFormat:@"doNOTFOUNDWith%@:"
+                                 data:[NSNull null]
+                        emptySelector:@selector(doEmpty)];
+        expect(s_Value).to.equal(333);
+        clearValue();
     });
     
-    it(@"will wait and succeed", ^{
-        waitUntil(^(DoneCallback done) {
-            done();
-        });
+    it(@"calls the proper method for object types based on the base parameter", ^{
+        [receiver dynamicInvokeFormat:@"doWith%@:"
+                                 data:@"Hello String"
+                        emptySelector:nil
+                                 base:@{@"key": @"value"}];
+        expect(s_Value).to.equal(222);
+        clearValue();
+        
+        [receiver dynamicInvokeFormat:@"doWith%@:"
+                                 data:@"Hello String"
+                        emptySelector:@selector(doEmpty)
+                                 base:[NSNull null]];
+        expect(s_Value).to.equal(333);
+        clearValue();
     });
+    
 });
 
 SpecEnd
