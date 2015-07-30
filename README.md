@@ -48,7 +48,7 @@ MyObject* myObj = /* get a MyObject */;
 
 DynamicInvoker can even handle protocols:
 
-```
+```objc
 @protocol ShowOffable <NSObject>
 
 @end
