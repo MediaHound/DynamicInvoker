@@ -10,6 +10,8 @@
 Objective-C does not have a way to perform method overloading. DynamicInvoker aims to fill that gap. Typically we would do something like this:
 
 ```objc
+@implementation MyObject
+
 - (void)doSomething:(id)obj
 {
     if ([obj isKindOfClass:NSString.class]) {
@@ -21,6 +23,14 @@ Objective-C does not have a way to perform method overloading. DynamicInvoker ai
         // do dictionary based logic
     }
 }
+
+@end
+```
+
+```objc
+MyObject* myObj = /* get a MyObject */;
+[myObj doSomething:@"a string"];
+[myObj doSomething:@{ @"aKey: @"aValue" }];
 ```
 
 With DynamicInvoker, you declare your methods with proper types and let DI figure out which should be invoked.
